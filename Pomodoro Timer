@@ -1,0 +1,315 @@
+//
+
+//  ViewController.swift
+
+//  ToDoTimer
+
+//
+
+//  Created by Young, Justin (jyoung51) on 12/3/19.
+
+//  Copyright © 2019 Young, Justin (jyoung51). All rights reserved.
+
+//
+
+
+import UIKit
+
+
+class ViewController: UIViewController {
+
+
+    enum IntervalType {
+
+        case Pomodoro
+
+        case RestBreak
+
+    }
+
+    //The intervals that takes from Task 2.
+
+    let intervals: [IntervalType] = [.Pomodoro,
+
+                                     .RestBreak,
+
+                                     .Pomodoro,
+
+                                     .RestBreak,
+
+                                     .Pomodoro,
+
+                                     .RestBreak,
+
+                                     .Pomodoro]
+
+    var currentInterval = 0
+
+    
+
+    let pomodoroIntervalTime = 25 * 60
+
+    let restBreakIntervalTime = 5 * 60
+
+    var timeRemaining = 0
+
+    
+
+    //Super Important. Don't ignore this this is how the entire app run
+
+    var mytimer = Timer()
+
+    
+
+    //My UI Controls
+
+    //--
+
+    
+
+   
+
+    @IBOutlet weak var intervalLabel: UILabel!
+
+    
+
+    @IBOutlet weak var Minuteslabel: UILabel!
+
+    
+
+    @IBOutlet weak var Secondslabel: UILabel!
+
+    
+
+    
+
+    @IBOutlet weak var Resetbutton: UIButton!
+
+   
+
+    @IBOutlet weak var StartPauseButton: UIButton!
+
+    //--
+
+    override func viewDidLoad() {
+
+        super.viewDidLoad()
+
+        // Do any additional setup after loading the view, typically from a nib.
+
+    }
+
+    
+
+    override func didReceiveMemoryWarning() {
+
+        super.didReceiveMemoryWarning()
+
+        // Dispose of any resources that can be recreated.
+
+    }
+
+    func resetToBeginning() {
+
+        currentInterval = 0
+
+        intervalLabel.text = "Ready to work?"
+
+        StartPauseButton.setTitle("Go!", for: .normal)
+
+        Resetbutton.isEnabled = false
+
+        timeRemaining = pomodoroIntervalTime
+
+        updateDisplay()
+
+    }
+
+    
+
+   
+
+    @IBAction func StartPauseButtonPressed(_ sender: UIButton) {
+
+        if mytimer.isValid {
+
+            ///If timer is paused change the Button name to "Resume." This was so hard to make.
+
+            StartPauseButton.setTitle("Resume", for: .normal)
+
+            Resetbutton.isEnabled = true
+
+            pauseTimer()
+
+        } else {
+
+            // If timer is running change the namer to pause
+
+            StartPauseButton.setTitle("Pause", for: .normal)
+
+            Resetbutton.isEnabled = false
+
+            if currentInterval == 0 && timeRemaining == pomodoroIntervalTime {
+
+                // If we’re currently at the very start of a set of pomodori
+
+                // begin the cycle of intervals.
+
+                startNextInterval()
+
+            } else {
+
+                
+
+                startTimer()
+
+            }
+
+        }
+
+        
+
+    }
+
+    
+
+    
+
+    @IBAction func ResetButtonPressed(_ sender: UIButton) {
+
+        if mytimer.isValid {
+
+            // The timer shouldn’t be running if the Reset button is enabled,
+
+            
+
+            mytimer.invalidate()
+
+        }
+
+        resetToBeginning()
+
+        
+
+    }
+
+    
+
+    func startNextInterval() {
+
+        if currentInterval < intervals.count {
+
+            // If intervals aren't finished proceed to the next one.
+
+            // The gist of this code ask like a stack that keep tracks of intervals within the timer.
+
+            
+
+            if intervals[currentInterval] == .Pomodoro {
+
+                // Pomodoro interval
+
+                timeRemaining = pomodoroIntervalTime
+
+                intervalLabel.text = "Start!"
+
+                let tomatoes = (currentInterval + 2) / 2
+
+                print("\(tomatoes) tomatoes")
+
+                
+
+            } else {
+
+                // Rest break interval
+
+                timeRemaining = restBreakIntervalTime
+
+                intervalLabel.text = "Take a break!"
+
+            }
+
+            updateDisplay()
+
+            startTimer()
+
+            currentInterval += 1
+
+        } else {
+
+            
+
+            resetToBeginning()
+
+        }
+
+    }
+
+    func updateDisplay() {
+
+        let (minutes, seconds) = minutesAndSeconds(from: timeRemaining)
+
+        Minuteslabel.text = formatMinuteOrSecond(minutes)
+
+        Secondslabel.text = formatMinuteOrSecond(seconds)
+
+    }
+
+    
+
+    func startTimer() {
+
+        mytimer = Timer.scheduledTimer(timeInterval: 1,
+
+                                       target: self,
+
+                                       selector: #selector(timerTick),
+
+                                       userInfo: nil,
+
+                                       repeats: true)
+
+    }
+
+    func minutesAndSeconds(from minutes: Int) -> (Int, Int) {
+
+        return (minutes / 60, minutes % 60)
+
+    }
+
+    func formatMinuteOrSecond(_ number: Int) -> String {
+
+        return String(format: "%02d", number)
+
+    }
+
+    @objc func timerTick() {
+
+        if timeRemaining > 0 {
+
+            timeRemaining -= 1
+
+            print("time: \(timeRemaining)")
+
+            updateDisplay()
+
+        } else {
+
+            mytimer.invalidate()
+
+            startNextInterval()
+
+        }
+
+    }
+
+    func pauseTimer() {
+
+        mytimer.invalidate()
+
+        intervalLabel.text = "Keep Going!"
+
+    }
+
+
+}
